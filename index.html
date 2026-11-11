@@ -37,7 +37,7 @@
     .weather-heading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:11px; }
     .weather-heading h3 { margin:0; font-size:15px; letter-spacing:-.015em; }
     .weather-time { color:#a9bdd5; font-size:12px; line-height:1.4; }
-    .weather-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .weather-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
     .weather-stat { padding:13px; border-radius:10px; background:#1c324c; border:1px solid #304c6a; min-width:0; }
     .weather-stat .stat-name { display:block; color:#b0c7e0; font-size:12px; font-weight:650; margin-bottom:5px; }
     .weather-stat .stat-value { display:block; color:#fff; font-size:clamp(20px,3vw,30px); font-weight:740; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
@@ -56,6 +56,7 @@
     .hourly tr.night td { background:#172944; }
     .hourly-caption { padding:10px 14px; color:#a9bdd5; font-size:11px; line-height:1.5; margin:0; }
     @media (max-width:600px) {
+      .weather-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .weather-panel { padding:11px; }
       .weather-stats { gap:6px; }
       .weather-stat { padding:9px 7px; }
@@ -98,6 +99,7 @@
         <div class="weather-stats">
           <div class="weather-stat"><span class="stat-name">Air temperature</span><strong class="stat-value" id="melbourne-temp">—</strong><div class="stat-hint">Current model estimate</div></div>
           <div class="weather-stat"><span class="stat-name">Dew point</span><strong class="stat-value" id="melbourne-dew">—</strong><div class="stat-hint">Current model estimate</div></div>
+          <div class="weather-stat"><span class="stat-name">Relative humidity</span><strong class="stat-value" id="melbourne-rh">—</strong><div class="stat-hint">Current model estimate</div></div>
           <div class="weather-stat"><span class="stat-name">Temp − dew point</span><strong class="stat-value" id="melbourne-spread">—</strong><div class="stat-hint">Smaller gap = higher dew risk</div></div>
         </div>
         <p class="weather-note">Numerical forecasts: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a>, independently of Clear Dark Sky. These are forecast estimates, not onsite sensor readings or numbers extracted from the chart.</p>
@@ -112,7 +114,7 @@
         <summary>Show next 48 hours: temperature and dew point (hourly)</summary>
         <div class="table-scroll">
           <table>
-            <thead><tr><th scope="col">Local time</th><th scope="col">Temp °F</th><th scope="col">Dew point °F</th><th scope="col">Gap °F</th></tr></thead>
+            <thead><tr><th scope="col">Local time</th><th scope="col">Temp °F</th><th scope="col">Dew point °F</th><th scope="col">RH %</th><th scope="col">Gap °F</th></tr></thead>
             <tbody id="melbourne-hours"><tr><td colspan="4">Loading forecast…</td></tr></tbody>
           </table>
         </div>
@@ -138,6 +140,7 @@
         <div class="weather-stats">
           <div class="weather-stat"><span class="stat-name">Air temperature</span><strong class="stat-value" id="utah-temp">—</strong><div class="stat-hint">Current model estimate</div></div>
           <div class="weather-stat"><span class="stat-name">Dew point</span><strong class="stat-value" id="utah-dew">—</strong><div class="stat-hint">Current model estimate</div></div>
+          <div class="weather-stat"><span class="stat-name">Relative humidity</span><strong class="stat-value" id="utah-rh">—</strong><div class="stat-hint">Current model estimate</div></div>
           <div class="weather-stat"><span class="stat-name">Temp − dew point</span><strong class="stat-value" id="utah-spread">—</strong><div class="stat-hint">Smaller gap = higher dew risk</div></div>
         </div>
         <p class="weather-note">Numerical forecasts: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a>, independently of Clear Dark Sky. These are forecast estimates, not onsite sensor readings or numbers extracted from the chart.</p>
@@ -152,7 +155,7 @@
         <summary>Show next 48 hours: temperature and dew point (hourly)</summary>
         <div class="table-scroll">
           <table>
-            <thead><tr><th scope="col">Local time</th><th scope="col">Temp °F</th><th scope="col">Dew point °F</th><th scope="col">Gap °F</th></tr></thead>
+            <thead><tr><th scope="col">Local time</th><th scope="col">Temp °F</th><th scope="col">Dew point °F</th><th scope="col">RH %</th><th scope="col">Gap °F</th></tr></thead>
             <tbody id="utah-hours"><tr><td colspan="4">Loading forecast…</td></tr></tbody>
           </table>
         </div>
@@ -198,8 +201,8 @@
           const params = new URLSearchParams({
             latitude: String(site.latitude),
             longitude: String(site.longitude),
-            current: 'temperature_2m,dew_point_2m',
-            hourly: 'temperature_2m,dew_point_2m',
+            current: 'temperature_2m,dew_point_2m,relative_humidity_2m',
+            hourly: 'temperature_2m,dew_point_2m,relative_humidity_2m',
             temperature_unit: 'fahrenheit',
             timezone: site.timezone,
             forecast_days: '3'
@@ -214,12 +217,15 @@
           const dew = Number(weather.current.dew_point_2m);
           element(prefix + '-temp').textContent = degrees(temp);
           element(prefix + '-dew').textContent = degrees(dew);
+          const rh = weather.current.relative_humidity_2m;
+          element(prefix + '-rh').textContent = typeof rh === 'number' && Number.isFinite(rh) ? Math.round(rh) + '%' : '—';
           element(prefix + '-spread').textContent = degrees(Number.isFinite(temp) && Number.isFinite(dew) ? Math.max(0, temp - dew) : NaN);
           element(prefix + '-update').textContent = 'Model valid ' + localTime(weather.current.time) + ' ' + site.zoneName;
 
           const hours = weather.hourly.time;
           const temps = weather.hourly.temperature_2m || [];
           const dews = weather.hourly.dew_point_2m || [];
+          const humidities = weather.hourly.relative_humidity_2m || [];
           const firstUpcoming = hours.findIndex(t => t > weather.current.time);
           const start = firstUpcoming < 0 ? 0 : firstUpcoming;
           const body = element(prefix + '-hours');
@@ -233,6 +239,7 @@
             const values = [
               localTime(hours[i]) + ' ' + site.zoneName,
               degrees(t), degrees(d),
+              typeof humidities[i] === 'number' && Number.isFinite(humidities[i]) ? Math.round(humidities[i]) + '%' : '—',
               degrees(Number.isFinite(t) && Number.isFinite(d) ? Math.max(0, t - d) : NaN)
             ];
             values.forEach(value => {
@@ -250,7 +257,7 @@
             body.replaceChildren();
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 4;
+            cell.colSpan = 5;
             cell.textContent = 'Unable to load the hourly forecast. Try Refresh.';
             row.appendChild(cell);
             body.appendChild(row);
