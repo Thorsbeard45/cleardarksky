@@ -31,6 +31,39 @@
     .hint { color:#98acc5; font-size:12px; margin:13px 1px 0; line-height:1.5; }
     footer { color:#90a3b9; font-size:12px; line-height:1.65; padding:5px 1px; }
     footer a { color:#a6cbff; }
+
+    /* Open-Meteo numerical weather forecast: separate from Clear Dark Sky imagery */
+    .weather-panel { margin: 0 0 16px; padding: 16px; border: 1px solid #355674; border-radius: 12px; background: #0b1b30; }
+    .weather-heading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:11px; }
+    .weather-heading h3 { margin:0; font-size:15px; letter-spacing:-.015em; }
+    .weather-time { color:#a9bdd5; font-size:12px; line-height:1.4; }
+    .weather-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .weather-stat { padding:13px; border-radius:10px; background:#1c324c; border:1px solid #304c6a; min-width:0; }
+    .weather-stat .stat-name { display:block; color:#b0c7e0; font-size:12px; font-weight:650; margin-bottom:5px; }
+    .weather-stat .stat-value { display:block; color:#fff; font-size:clamp(20px,3vw,30px); font-weight:740; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+    .weather-stat .stat-hint { color:#a8bdd3; font-size:11px; margin-top:4px; line-height:1.3; }
+    .weather-note { color:#a9bdd5; font-size:12px; line-height:1.55; margin:11px 0 0; }
+    .weather-note a { color:#add2ff; }
+    .hourly { margin-top:14px; border:1px solid #355674; border-radius:10px; background:#0c1b2c; }
+    .hourly summary { padding:13px 15px; font-size:13px; font-weight:650; color:#dcecff; cursor:pointer; }
+    .hourly summary:focus-visible { outline:3px solid #7bb6ff; outline-offset:2px; }
+    .hourly[open] summary { border-bottom:1px solid #355674; }
+    .table-scroll { max-height:420px; overflow:auto; }
+    .hourly table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+    .hourly th { position:sticky; top:0; background:#203b57; color:#d9e8fa; font-size:12px; text-align:right; padding:10px 12px; white-space:nowrap; z-index:1; }
+    .hourly th:first-child, .hourly td:first-child { text-align:left; }
+    .hourly td { border-top:1px solid #263d56; color:#e0ecfa; padding:8px 12px; text-align:right; white-space:nowrap; }
+    .hourly tr.night td { background:#172944; }
+    .hourly-caption { padding:10px 14px; color:#a9bdd5; font-size:11px; line-height:1.5; margin:0; }
+    @media (max-width:600px) {
+      .weather-panel { padding:11px; }
+      .weather-stats { gap:6px; }
+      .weather-stat { padding:9px 7px; }
+      .weather-stat .stat-name { font-size:11px; }
+      .weather-stat .stat-value { font-size:20px; }
+      .weather-stat .stat-hint { font-size:10px; }
+      .hourly td, .hourly th { padding:8px 9px; font-size:12px; }
+    }
     @media (max-width:700px) { body {padding:18px 12px 36px;} .card {padding:14px;} .top {margin-bottom:17px;} .meta{text-align:left;} .chartbox {padding:6px;} }
   </style>
 </head>
@@ -56,12 +89,36 @@
         </div>
         <a class="source" href="https://www.cleardarksky.com/c/MlbrnFLkey.html" target="_blank" rel="noopener noreferrer">Open full chart ↗</a>
       </div>
+
+      <div class="weather-panel" aria-label="Numerical temperature and dew point forecast">
+        <div class="weather-heading">
+          <h3>Temperature &amp; Dew Point</h3>
+          <span class="weather-time" id="melbourne-update" aria-live="polite">Loading forecast…</span>
+        </div>
+        <div class="weather-stats">
+          <div class="weather-stat"><span class="stat-name">Air temperature</span><strong class="stat-value" id="melbourne-temp">—</strong><div class="stat-hint">Current model estimate</div></div>
+          <div class="weather-stat"><span class="stat-name">Dew point</span><strong class="stat-value" id="melbourne-dew">—</strong><div class="stat-hint">Current model estimate</div></div>
+          <div class="weather-stat"><span class="stat-name">Temp − dew point</span><strong class="stat-value" id="melbourne-spread">—</strong><div class="stat-hint">Smaller gap = higher dew risk</div></div>
+        </div>
+        <p class="weather-note">Numerical forecasts: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a>, independently of Clear Dark Sky. These are forecast estimates, not onsite sensor readings or numbers extracted from the chart.</p>
+      </div>
       <div class="chartbox">
         <a href="https://www.cleardarksky.com/c/MlbrnFLkey.html" target="_blank" rel="noopener noreferrer" aria-label="Open Melbourne Clear Sky Chart">
           <img id="melbourneChart" src="https://www.cleardarksky.com/c/MlbrnFLcsk.gif?c=846007" alt="Current Clear Dark Sky chart for Melbourne, Florida, with cloud cover, transparency, seeing and other observing conditions" />
         </a>
       </div>
       <p class="hint">Click the forecast to open its original interactive page. On narrow screens, scroll sideways to see the whole chart.</p>
+      <details class="hourly">
+        <summary>Show next 48 hours: temperature and dew point (hourly)</summary>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Local time</th><th scope="col">Temp °F</th><th scope="col">Dew point °F</th><th scope="col">Gap °F</th></tr></thead>
+            <tbody id="melbourne-hours"><tr><td colspan="4">Loading forecast…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="hourly-caption">All hours are local to this observatory. Darker rows indicate 6 PM–6 AM. Forecast numbers may differ from Clear Dark Sky's graphical forecast.</p>
+      </details>
+
     </section>
 
     <section class="card utah" aria-labelledby="uttitle">
@@ -72,33 +129,150 @@
         </div>
         <a class="source" href="https://www.cleardarksky.com/c/UDROUTkey.html" target="_blank" rel="noopener noreferrer">Open full chart ↗</a>
       </div>
+
+      <div class="weather-panel" aria-label="Numerical temperature and dew point forecast">
+        <div class="weather-heading">
+          <h3>Temperature &amp; Dew Point</h3>
+          <span class="weather-time" id="utah-update" aria-live="polite">Loading forecast…</span>
+        </div>
+        <div class="weather-stats">
+          <div class="weather-stat"><span class="stat-name">Air temperature</span><strong class="stat-value" id="utah-temp">—</strong><div class="stat-hint">Current model estimate</div></div>
+          <div class="weather-stat"><span class="stat-name">Dew point</span><strong class="stat-value" id="utah-dew">—</strong><div class="stat-hint">Current model estimate</div></div>
+          <div class="weather-stat"><span class="stat-name">Temp − dew point</span><strong class="stat-value" id="utah-spread">—</strong><div class="stat-hint">Smaller gap = higher dew risk</div></div>
+        </div>
+        <p class="weather-note">Numerical forecasts: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo</a>, independently of Clear Dark Sky. These are forecast estimates, not onsite sensor readings or numbers extracted from the chart.</p>
+      </div>
       <div class="chartbox">
         <a href="https://www.cleardarksky.com/c/UDROUTkey.html" target="_blank" rel="noopener noreferrer" aria-label="Open Utah Desert Remote Observatories Clear Sky Chart">
           <img id="utahChart" src="https://www.cleardarksky.com/c/UDROUTcsk.gif?c=835225" alt="Current Clear Dark Sky chart for Utah Desert Remote Observatories, near AstroPeak in Beryl, Utah" />
         </a>
       </div>
       <p class="hint">This is the closest verified regional chart used here, not a custom forecast for the AstroPeak coordinates.</p>
+      <details class="hourly">
+        <summary>Show next 48 hours: temperature and dew point (hourly)</summary>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Local time</th><th scope="col">Temp °F</th><th scope="col">Dew point °F</th><th scope="col">Gap °F</th></tr></thead>
+            <tbody id="utah-hours"><tr><td colspan="4">Loading forecast…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="hourly-caption">All hours are local to this observatory. Darker rows indicate 6 PM–6 AM. Forecast numbers may differ from Clear Dark Sky's graphical forecast.</p>
+      </details>
+
     </section>
 
     <footer>
       Source: <a href="https://www.cleardarksky.com/" target="_blank" rel="noopener noreferrer">Clear Dark Sky / Clear Sky Charts</a>. The chart graphics remain hosted and updated by Clear Dark Sky. This personal, noncommercial dashboard only displays their permitted chart images and links back to the original pages. Chart forecasts may update less frequently than this page checks for new images.
     </footer>
   </main>
+
   <script>
     (() => {
-      const entries = [
+      const sites = [
+        { id: 'melbourne', latitude: 28.0836, longitude: -80.6081, timezone: 'America/New_York', zoneName: 'ET' },
+        { id: 'utah', latitude: 37.827106, longitude: -113.658742, timezone: 'America/Denver', zoneName: 'MT' }
+      ];
+      const charts = [
         ['melbourneChart', 'https://www.cleardarksky.com/c/MlbrnFLcsk.gif'],
         ['utahChart', 'https://www.cleardarksky.com/c/UDROUTcsk.gif']
       ];
       const label = document.getElementById('refreshTime');
-      function refresh() {
-        const cacheBuster = Date.now();
-        entries.forEach(([id, url]) => { document.getElementById(id).src = url + '?c=' + cacheBuster; });
-        label.textContent = 'Checked for new charts at ' + new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+      const element = id => document.getElementById(id);
+      const number = value => Number.isFinite(value) ? value.toFixed(1) : '—';
+      const degrees = value => Number.isFinite(value) ? number(value) + '°F' : '—';
+      function localTime(iso) {
+        if (!iso || !/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(iso)) return 'unknown time';
+        const month = Number(iso.slice(5, 7));
+        const day = Number(iso.slice(8, 10));
+        const hour = Number(iso.slice(11, 13));
+        const minute = iso.slice(14, 16);
+        return month + '/' + day + ' ' + (hour % 12 || 12) + ':' + minute + (hour < 12 ? ' AM' : ' PM');
       }
-      document.getElementById('refresh').addEventListener('click', refresh);
-      refresh();
-      setInterval(refresh, 15 * 60 * 1000);
+      function refreshCharts() {
+        const stamp = Date.now();
+        charts.forEach(([id, url]) => { element(id).src = url + '?c=' + stamp; });
+      }
+      async function refreshSite(site) {
+        const prefix = site.id;
+        try {
+          const params = new URLSearchParams({
+            latitude: String(site.latitude),
+            longitude: String(site.longitude),
+            current: 'temperature_2m,dew_point_2m',
+            hourly: 'temperature_2m,dew_point_2m',
+            temperature_unit: 'fahrenheit',
+            timezone: site.timezone,
+            forecast_days: '3'
+          });
+          const response = await fetch('https://api.open-meteo.com/v1/forecast?' + params.toString(), { cache: 'no-store' });
+          if (!response.ok) throw new Error('Weather API returned ' + response.status);
+          const weather = await response.json();
+          if (!weather.current || !weather.hourly || !Array.isArray(weather.hourly.time)) {
+            throw new Error('Incomplete forecast data');
+          }
+          const temp = Number(weather.current.temperature_2m);
+          const dew = Number(weather.current.dew_point_2m);
+          element(prefix + '-temp').textContent = degrees(temp);
+          element(prefix + '-dew').textContent = degrees(dew);
+          element(prefix + '-spread').textContent = degrees(Number.isFinite(temp) && Number.isFinite(dew) ? Math.max(0, temp - dew) : NaN);
+          element(prefix + '-update').textContent = 'Model valid ' + localTime(weather.current.time) + ' ' + site.zoneName;
+
+          const hours = weather.hourly.time;
+          const temps = weather.hourly.temperature_2m || [];
+          const dews = weather.hourly.dew_point_2m || [];
+          const firstUpcoming = hours.findIndex(t => t > weather.current.time);
+          const start = firstUpcoming < 0 ? 0 : firstUpcoming;
+          const body = element(prefix + '-hours');
+          const fragment = document.createDocumentFragment();
+          for (let i = start; i < Math.min(hours.length, start + 48); i++) {
+            const tr = document.createElement('tr');
+            const hour = Number(hours[i].slice(11, 13));
+            if (hour >= 18 || hour < 6) tr.classList.add('night');
+            const t = typeof temps[i] === 'number' ? temps[i] : NaN;
+            const d = typeof dews[i] === 'number' ? dews[i] : NaN;
+            const values = [
+              localTime(hours[i]) + ' ' + site.zoneName,
+              degrees(t), degrees(d),
+              degrees(Number.isFinite(t) && Number.isFinite(d) ? Math.max(0, t - d) : NaN)
+            ];
+            values.forEach(value => {
+              const td = document.createElement('td');
+              td.textContent = value;
+              tr.appendChild(td);
+            });
+            fragment.appendChild(tr);
+          }
+          body.replaceChildren(fragment);
+        } catch (error) {
+          element(prefix + '-update').textContent = 'Forecast unavailable — click Refresh to retry';
+          const body = element(prefix + '-hours');
+          if (body.children.length === 1 && body.children[0].textContent.includes('Loading')) {
+            body.replaceChildren();
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 4;
+            cell.textContent = 'Unable to load the hourly forecast. Try Refresh.';
+            row.appendChild(cell);
+            body.appendChild(row);
+          }
+          console.warn('Could not load ' + prefix + ' weather forecast', error);
+        }
+      }
+      let refreshing = false;
+      async function refreshAll() {
+        refreshCharts();
+        label.textContent = 'Checked for new charts at ' + new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+        if (refreshing) return;
+        refreshing = true;
+        try {
+          await Promise.all(sites.map(refreshSite));
+        } finally {
+          refreshing = false;
+        }
+      }
+      element('refresh').addEventListener('click', refreshAll);
+      refreshAll();
+      setInterval(refreshAll, 15 * 60 * 1000);
     })();
   </script>
 </body>
